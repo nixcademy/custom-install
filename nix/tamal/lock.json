@@ -1,0 +1,6 @@
+{"v":"1.5.0"
+,"i":{
+"nixpkgs":{"sn":null,"kd":[1,{"ft":0,"ur":"https://github.com/NixOS/nixpkgs/archive/3ec636362e1816bc2f0888fa0fa2c69f1bc9e504.tar.gz","ms":[],"ex":null}],"ha":{"al":0,"vl":"sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw="},"fv":"3ec636362e1816bc2f0888fa0fa2c69f1bc9e504","ps":[]}
+}
+,"p":{}
+}

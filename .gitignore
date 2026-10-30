@@ -1,0 +1,4 @@
+nixos-vm/
+result
+disk.qcow2
+efivars.fd
