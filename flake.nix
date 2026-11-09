@@ -3,57 +3,51 @@
 
   inputs.nixpkgs.url = "https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.zst";
 
-  outputs = inputs:
+  outputs =
+    inputs:
     let
-      # change this to aarch64-linux if you are on an ARM system
-      system = "x86_64-linux";
-
       inherit (inputs.nixpkgs) lib;
-      pkgs = inputs.nixpkgs.legacyPackages.${system};
-      installer = inputs.self.nixosConfigurations.installer;
     in
     {
       nixosConfigurations.installer = lib.nixosSystem {
         modules = [
-          ({ modulesPath, pkgs, ... }: {
-            imports = [
-              # standard nixos minimal installer config
-              "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
-              # our customizations
-              ./vim.nix
-              ./wifi.nix
-            ];
-            environment.systemPackages = [ pkgs.git ];
-            nixpkgs.hostPlatform = system;
-          })
+          (
+            { modulesPath, pkgs, ... }:
+            {
+              imports = [
+                # standard nixos minimal installer config
+                "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
+                # our customizations
+                ./modules/vim.nix
+                ./modules/wifi.nix
+              ];
+              environment.systemPackages = [ pkgs.git ];
+              nixpkgs.hostPlatform = "x86_64-linux";
+            }
+          )
         ];
       };
 
-      packages.${system} = {
-        iso = installer.config.system.build.isoImage;
+      packages = builtins.mapAttrs (system: pkgs: {
+        iso =
+          (inputs.self.nixosConfigurations.installer.extendModules {
+            modules = [ { nixpkgs.hostPlatform = lib.mkForce system; } ];
+          }).config.system.build.isoImage;
 
-        # Boots the installer with a fresh, empty 20G disk in the current directory
-        run-vm = pkgs.writeShellScriptBin "run-vm" ''
-          set -euo pipefail
-          ${pkgs.qemu_kvm}/bin/qemu-img create -f qcow2 disk.qcow2 20G
-          install -m 644 ${pkgs.OVMF.variables} efivars.fd
+        nixos-vm = import ./vm-demo.nix {
+          inherit pkgs;
+          isoImage = inputs.self.packages.${system}.iso;
+        };
 
-          exec ${pkgs.qemu_kvm}/bin/qemu-system-x86_64 \
-            -machine q35,accel=kvm \
-            -cpu host \
-            -smp 4 \
-            -m 4G \
-            -drive if=pflash,format=raw,readonly=on,file=${pkgs.OVMF.firmware} \
-            -drive if=pflash,format=raw,file=efivars.fd \
-            -drive if=virtio,format=qcow2,file=disk.qcow2 \
-            -cdrom ${inputs.self.packages.${system}.iso}/iso/*.iso
-            -nic user,model=virtio-net-pci \
-            -device VGA,edid=on,xres=1280,yres=800 \
-            -display gtk,show-cursor=on \
-            "$@"
-        '';
+        default = inputs.self.packages.${system}.iso;
+      }) inputs.nixpkgs.legacyPackages;
 
-        default = inputs.self.packages.x86_64-linux.run-vm;
-      };
+      # Use `nix run` to boot VM and test/demonstrate installation manually
+      apps = builtins.mapAttrs (system: pkgs: {
+        default = {
+          type = "app";
+          program = lib.getExe inputs.self.packages.${system}.nixos-vm;
+        };
+      }) inputs.nixpkgs.legacyPackages;
     };
 }
