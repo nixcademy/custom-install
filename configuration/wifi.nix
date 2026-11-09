@@ -19,4 +19,11 @@
     ipv4.method = "auto";
     ipv6.method = "auto";
   };
+
+  # add your SSH key here. Laptops will pop up in your network and you can
+  # install via root shell or use nixos-anywhere.
+  services.openssh.enable = true;
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDu77nd6FXzaJCbaVSzD/3OUhfixGwFR1C79Oqt3H03U demo@example.com"
+  ];
 }
