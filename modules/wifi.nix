@@ -9,12 +9,12 @@
       autoconnect = true;
     };
     wifi = {
-      ssid = "MyHomeNetwork";
+      ssid = "MyHomeNetwork"; # your wifi SSID here
       mode = "infrastructure";
     };
     wifi-security = {
       key-mgmt = "wpa-psk";
-      psk = "my-home-password";
+      psk = "my-home-password"; # your wifi password here
     };
     ipv4.method = "auto";
     ipv6.method = "auto";
