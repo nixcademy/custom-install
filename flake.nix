@@ -9,15 +9,17 @@
       inherit (inputs.nixpkgs) lib;
     in
     {
-      nixosConfigurations.installer = lib.nixosSystem {
-        modules = [ ./configuration ];
-      };
-
       packages = builtins.mapAttrs (system: pkgs: {
         iso =
-          (inputs.self.nixosConfigurations.installer.extendModules {
-            modules = [ { nixpkgs.hostPlatform = lib.mkForce system; } ];
-          }).config.system.build.isoImage;
+          let
+            # could use nixpkgs.lib.nixosSystem instead pkgs.nixo but then you
+            # must enable flakes as it injects flake related settings
+            nixos = pkgs.nixos [
+              ./configuration
+              { nixpkgs.hostPlatform = lib.mkForce system; }
+            ];
+          in
+          nixos.config.system.build.isoImage;
 
         nixos-vm = import ./vm-demo.nix {
           inherit pkgs;
