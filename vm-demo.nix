@@ -21,7 +21,7 @@ pkgs.writeShellApplication {
     mkdir -p nixos-vm
     if ! $keep || [[ ! -e "$disk" ]]; then
       rm -f "$disk" "$efivars"
-      qemu-img create -q -f qcow2 "$disk" 20G
+      qemu-img create -q -f qcow2 "$disk" 40G
       install -m 644 ${pkgs.OVMF.variables} "$efivars"
     fi
 
