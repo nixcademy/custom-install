@@ -6,6 +6,7 @@
     # our customizations
     ./vim.nix
     ./wifi.nix
+    ./partition-format-mount.nix
   ];
 
   environment.systemPackages = [

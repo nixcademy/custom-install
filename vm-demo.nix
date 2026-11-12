@@ -15,14 +15,13 @@ pkgs.writeShellApplication {
     efivars=nixos-vm/efivars.fd
     iso=(${isoImage}/iso/*.iso)
 
-    keep=false
-    if [[ "''${1:-}" == "--keep" ]]; then keep=true; shift; fi
-
     mkdir -p nixos-vm
-    if ! $keep || [[ ! -e "$disk" ]]; then
+    if [[ ! -e "$disk" ]]; then
       rm -f "$disk" "$efivars"
       qemu-img create -q -f qcow2 "$disk" 40G
       install -m 644 ${pkgs.OVMF.variables} "$efivars"
+    else
+      echo "REUSING EXISTING DISK"
     fi
 
     exec ${qemu-common.qemuBinary pkgs.qemu_kvm} \
@@ -36,7 +35,7 @@ pkgs.writeShellApplication {
       -device virtio-blk-pci,drive=disk0,iothread=io0,bootindex=0 \
       -drive if=none,id=cd0,file="''${iso[0]}",media=cdrom,readonly=on \
       -device ide-cd,drive=cd0,bootindex=1 \
-      -nic user,model=virtio-net-pci \
+      -nic user,model=virtio-net-pci,hostfwd=tcp:127.0.0.1:"''${SSH_PORT:-2222}"-:22 \
       -device virtio-rng-pci \
       -device virtio-balloon-pci,free-page-reporting=on \
       -device VGA,edid=on,xres=1280,yres=800,vgamem_mb=32 \
